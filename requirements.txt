@@ -1,3 +1,4 @@
 webvtt
 pykakasi
+janome
 tqdm
