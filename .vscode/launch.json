@@ -17,7 +17,7 @@
             "type": "python",
             "request": "launch",
             "program": "main.py",
-            "args": ["subtitles/", "-e", "-s", "vocab.csv", "-t", "csv"],
+            "args": ["convert", "subtitles/", "-e", "-s", "converted/vocab.csv", "-t", "csv"],
             "console": "integratedTerminal",
             "justMyCode": true
         },

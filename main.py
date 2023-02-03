@@ -12,6 +12,7 @@ import csv
 import json
 import argparse
 import re
+import datetime
 from enum import Enum
 
 STYLE = Style()
@@ -26,14 +27,21 @@ RT_REGEX = re.compile(RT_REGEX_STRING)
 RUBY_REGEX_STRING = r'</?ruby>'
 RUBY_REGEX = re.compile(RUBY_REGEX_STRING)
 
-
-# 助詞 particle
-# 助動詞 auxiliary verb
-# 記号 symbol
-# 接頭詞 prefix
-# 数 number
-# フィラー filler
-POS_FILTER = ['助詞', '助動詞', '記号', '接頭詞', '数', 'フィラー']
+POS_FILTER = [
+    '助詞',  # particle
+    '副詞,助詞類接続',  # adverbs, particles conjunction
+    '助動詞',  # auxiliary verb
+    '名詞,非自立,助動詞語幹',  # noun, non-independent, auxiliary verb stem
+    '記号',  # symbol
+    '接頭詞', # prefix
+    '名詞,接尾',  # noun, suffix
+    '動詞,接尾',  # verb, suffix
+    '形容詞,接尾',  # adjective, suffix
+    '接尾',  # suffix
+    '名詞,数',  # noun, number
+    '数',  # number
+    'フィラー',  # filler
+]
 
 class VocabularyType(str, Enum):
     JSON = 'json'
@@ -85,7 +93,7 @@ def load_vocabulary_json(filename):
 
 def filter_node(node):
     for pos in POS_FILTER:
-        if pos in node.part_of_speech:
+        if node.part_of_speech.startswith(pos):
             return True
 
     return False
@@ -198,13 +206,17 @@ def print_occurences_for_file_path(query: str, timestamps: List[str], file_path:
     timestamps.sort()
     subtitles = webvtt.read(file_path)
     current_timestamp = 0
+    print(file_path)
     for caption in subtitles:
         if current_timestamp >= len(timestamps):
             break
         if caption.end_in_seconds <= timestamps[current_timestamp]:
             continue
 
-        print(RUBY_REGEX.sub('', RT_REGEX.sub('', caption.raw_text)))
+        print(
+            f"{datetime.timedelta(seconds=timestamps[current_timestamp])}: "
+            f"{RUBY_REGEX.sub('', RT_REGEX.sub('', caption.raw_text))}"
+        )
         current_timestamp += 1
 
 def find_examples(
@@ -227,7 +239,6 @@ def find_examples(
         return
 
     occurences = vocabulary[query]['occurences']
-    print(occurences)
     if isinstance(occurences, list):
         if not subtitles_file:
             raise Exception('vocabulary was generated for a single file which was not specified')
