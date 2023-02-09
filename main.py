@@ -202,22 +202,29 @@ def convert(
         else:
             save_vocabulary_json(common_vocabulary, single_vocabulary_file)
 
-def print_occurences_for_file_path(query: str, timestamps: List[str], file_path: str):
+
+def find_occurences_for_file_path(query: str, timestamps: List[str], file_path: str):
     timestamps.sort()
     subtitles = webvtt.read(file_path)
     current_timestamp = 0
-    print(file_path)
+    occurences = []
     for caption in subtitles:
         if current_timestamp >= len(timestamps):
             break
         if caption.end_in_seconds <= timestamps[current_timestamp]:
             continue
 
-        print(
-            f"{datetime.timedelta(seconds=timestamps[current_timestamp])}: "
-            f"{RUBY_REGEX.sub('', RT_REGEX.sub('', caption.raw_text))}"
-        )
+        occurences.append(RUBY_REGEX.sub('', RT_REGEX.sub('', caption.raw_text)))
         current_timestamp += 1
+
+    return occurences
+
+
+def print_occurences_for_file_path(query: str, timestamps: List[str], file_path: str):
+    print(file_path)
+    occurences = find_occurences_for_file_path(query, timestamps, file_path)
+    for occurence, timestamp in zip(occurences, timestamps):
+        print(f"{datetime.timedelta(seconds=timestamp)}: {occurence}")
 
 def find_examples(
     query: str, 
